@@ -1,0 +1,11 @@
+.left-nav {
+    float: left;
+    width: 20%;
+    border: 1px solid;
+}
+
+.content {
+    width: 70%;
+    margin-left: 21%;
+    border: 1px solid;
+}
