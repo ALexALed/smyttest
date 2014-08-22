@@ -1,42 +1,31 @@
-from django.shortcuts import render_to_response
-from models import modelslist
-from django.db import models
-from django.http import HttpResponse
-
 import json
+from django.shortcuts import render_to_response
+from django.http import HttpResponse, Http404
+from django.core import serializers
+from models import modelslist
+import modelsutils
+
 
 def home(request):
     models_titles = [(model._meta.verbose_name.title(), model.__name__) for model in modelslist]
-    return render_to_response("home.html", {'tables': models_titles})
+    return render_to_response("index.html", {'tables': models_titles})
+
 
 def table_content(request, table_class_name):
-    modelclass = None
-    for table in modelslist:
-        if table.__name__ == table_class_name:
-            modelclass = table
-            break
 
+    modelclass = modelsutils.get_modelclass_by_name(table_class_name)
+
+    if not modelclass:
+        raise Http404
 
     #get class attributes and types
-    models_fields_type={}
-    for attr in modelclass._meta.fields:
-        field_class = attr.__class__
-        if field_class == models.fields.AutoField:
-            continue
-        field_type = None
-        if field_class == models.fields.CharField:
-            field_type = 'char'
-        elif field_class == models.fields.IntegerField:
-            field_type = 'int'
-        elif field_class == models.fields.DateField:
-            field_type = 'date'
-
-        models_fields_type[attr.attname] = field_type
+    models_fields = modelsutils.get_fields_names_types(modelclass)
 
     models_objects = modelclass.objects.all()
 
-    send_data = {'tablename': table_class_name, 'fields': models_fields_type, 'tabledata': models_objects}
+    json_objects = serializers.serialize("json", models_objects)
+    send_data = {'tablename': table_class_name, 'fields': models_fields, 'tabledata': json_objects}
 
-    return HttpResponse(json.dump(send_data), content_type="application/json")
+    return HttpResponse(json.dumps(send_data), content_type="application/json")
 
 
