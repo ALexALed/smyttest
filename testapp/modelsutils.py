@@ -4,7 +4,6 @@ __author__ = 'alexaled'
 
 import datetime
 from django.db import models
-from models import modelslist
 
 
 fields_types = {
@@ -40,17 +39,5 @@ def get_fields_names_types(modelclass):
         elif field_class == models.fields.DateField:
             field_type = 'date'
 
-        models_fields.append({'name': attr.attname, 'type': field_type})
+        models_fields.append({'name': attr.attname, 'type': field_type, 'verbose_name': attr.verbose_name})
     return models_fields
-
-
-def get_modelclass_by_name(classname):
-    '''
-    Function find class by class name in models class list
-    '''
-    modelclass = None
-    for table in modelslist:
-        if table.__name__ == classname:
-            modelclass = table
-            break
-    return modelclass

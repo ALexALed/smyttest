@@ -4,7 +4,6 @@ from smyttest import settings
 import modelsutils
 
 
-
 def create_models():
     '''
     Function create models from yaml file description
@@ -27,8 +26,19 @@ def create_models():
 
             modelclass = type(data, (models.Model,), attributes)
             modelslist.append(modelclass)
-            #globals()[data] = modelclass
+
     return modelslist
+
+def get_modelclass_by_name(classname):
+    '''
+    Function find class by class name in models class list
+    '''
+    modelclass = None
+    for table in modelslist:
+        if table.__name__ == classname:
+            modelclass = table
+            break
+    return modelclass
 
 
 modelslist = create_models()

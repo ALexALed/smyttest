@@ -9,3 +9,20 @@
     margin-left: 21%;
     border: 1px solid;
 }
+
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    width: 100%;
+}
+
+th {
+    text-align: center;
+    padding: 5px;
+    border: 1px solid black;
+   }
+
+td {
+    padding: 5px;
+    border: 1px solid black;
+   }
