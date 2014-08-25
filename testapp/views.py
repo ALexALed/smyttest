@@ -36,7 +36,9 @@ def table_post(request):
         field = request.POST[u'field']
         id = request.POST[u'object_id']
         value = request.POST[u'value']
-
+        models.update_object(table, id, field, value)
+        send_data = {'success': True}
+        return HttpResponse(json.dumps(send_data), content_type="application/json")
     else:
         raise Http404
 

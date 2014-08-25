@@ -42,7 +42,3 @@ def get_fields_names_types(modelclass):
         models_fields.append({'name': attr.attname, 'type': field_type, 'verbose_name': attr.verbose_name})
     return models_fields
 
-
-def update_object(modelclass, fields):
-    object_upd = modelclass.get(pk=fields['id'])
-    object_upd.update()
