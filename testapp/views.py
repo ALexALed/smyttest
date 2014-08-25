@@ -34,7 +34,7 @@ def table_post(request):
     if request.POST and request.is_ajax():
         table = request.POST[u'table']
         field = request.POST[u'field']
-        object_id = request.POST[u'object_id']
+        id = request.POST[u'object_id']
         value = request.POST[u'value']
 
     else:
