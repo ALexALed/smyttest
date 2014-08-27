@@ -2,7 +2,6 @@
 
 {% block sheets %}
 
-    <h1>Таблицы</h1>
     <ul>
         {% for table in tables %}
             <li><a href="#" class="tablelink" id="{% url 'table-content' table.1 %}">{{ table.0 }}</a></li>
@@ -15,133 +14,252 @@
 
     <table id="activetable"></table>
 
+    <form id="newform" method="POST" action="{% url 'new-post' %}">
+        {% csrf_token %}
+    </form>
+    <div id="msg">
+
+    </div>
+
     <script>
-        $(document).ready(function () {
-            var csrftoken = $.cookie('csrftoken');
+    $(document).ready(function () {
+        $('#msg').empty();
+        var csrftoken = $.cookie('csrftoken');
 
-            function csrfSafeMethod(method) {
-                // these HTTP methods do not require CSRF protection
-                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-            }
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
 
-            $.ajaxSetup({
-                beforeSend: function (xhr, settings) {
-                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
+            }
+        });
+
+        $('.tablelink').click(function () {
+            $('#msg').empty();
+            $.get($(this).attr('id'), function (data) {
+                fillTable(data.tablename, data.fields, data.tabledata);
+                fillNewForm(data.tablename, data.fields);
             });
+        });
 
-            $('.tablelink').click(function () {
-                $.get($(this).attr('id'), function (data) {
-                    fillTable(data.tablename, data.fields, data.tabledata);
+        function parseClasses(element) {
+            var arrClasses = element.attr('class').split(' ');
+            var celltype = '';
+            var cellname = '';
+            for (elClass in arrClasses) {
+                if (arrClasses[elClass] == 'int' || arrClasses[elClass] == 'char' || arrClasses[elClass] == 'date') {
+                    celltype = arrClasses[elClass];
+                } else {
+                    cellname = arrClasses[elClass];
+                }
+            }
+            return {type: celltype, name: cellname};
+        }
+
+        function sendNewValue(tableName, fieldName, rowId, valueNew) {
+            $.post({% url 'table-post' %}, {table: tableName, field: fieldName, object_id: rowId, value: valueNew});
+        }
+
+        function onCellClick(element) {
+            var value = element.text();
+            var cellProps = parseClasses(element);
+            var celltype = cellProps.type;
+            var cellname = cellProps.name;
+
+            if (cellname == 'id') {
+                return;
+            }
+
+            element.unbind('click');
+            element.empty();
+            element.append('<input type="text" id="inp" name="' + cellname + '" class = "' + celltype + '" value = "' + value + '"/>');
+
+            if (celltype == 'date') {
+                $('#inp').datepicker();
+                $('#inp').datepicker('option', 'dateFormat', 'yy-mm-dd');
+                $('#inp').datepicker("setDate", value);
+                $('#inp').keydown(function(){
+                  return false;
                 });
-            });
-
-            function parseClasses(element) {
-                var arrClasses = element.attr('class').split(' ');
-                var celltype = '';
-                var cellname = '';
-                for (elClass in arrClasses) {
-                    if (arrClasses[elClass] == 'int' || arrClasses[elClass] == 'char' || arrClasses[elClass] == 'date') {
-                        celltype = arrClasses[elClass];
-                    } else {
-                        cellname = arrClasses[elClass];
-                    }
-                }
-                return {type: celltype, name: cellname};
             }
 
-            function sendNewValue(tableName, fieldName, rowId, valueNew) {
-                $.post({% url 'table-post' %}, {table: tableName, field: fieldName, object_id: rowId, value: valueNew});
-            }
+            $('#inp').focus();
 
-            function onCellClick(element) {
-                var value = element.text();
-                var cellProps = parseClasses(element);
-                var celltype = cellProps.type;
-                var cellname = cellProps.name;
-
-                if (cellname == 'id') {
-                    return;
-                }
-
-                element.unbind('click');
-                element.empty();
-                element.append('<input type="text" id="inp" name="' + cellname + '" class = "' + celltype + '" value = "' + value + '"/>');
-
-                if (celltype == 'date') {
-                    $('#inp').datepicker();
-                    $('#inp').datepicker('option', 'dateFormat', 'yy-mm-dd');
-                    $('#inp').datepicker("setDate", value);
-                }
-
-                $('#inp').change(function (event) {
-                    var table = $('#activetable');
-                    var tableName = table.attr('class');
-                    var rowId = element.parent().children('.id').text();
-                    var previousValue = event.currentTarget.defaultValue;
-                    var parent = $(this).parent();
-                    var valueType = $(this).attr('class');
-                    var valueNew = $(this).val();
-                    var fieldName = $(this).attr('name');
-                    parent.empty();
-
-                    if (valueType == 'int') {
-                        if (isNaN(valueNew)) {
-                            valueNew = previousValue;
-                        }
-                    }
-
-                    sendNewValue(tableName, fieldName, rowId, valueNew);
-
-                    parent.text(valueNew);
-                    parent.click(function () {
-                        onCellClick($(this));
-                    });
-                });
-
-
-            }
-
-            function fillTable(tablename, fields, tabledata) {
+            $('#inp').change(function (event) {
                 var table = $('#activetable');
-                table.attr('class', tablename);
-                //clean table
-                table.empty();
-                //table headers
-                var headers = '<tr>';
-                var field = null;
-                for (field in fields) {
-                    headers += '<th>' + fields[field].verbose_name + '</th>';
-                }
-                headers += '</tr>';
-                //table rows
-                var rowdata = null;
-                var rows = '';
-                tabledata = JSON.parse(tabledata);
-                for (rowdata in tabledata) {
-                    var row = '<tr>';
-                    for (field in fields) {
-                        var cellvalue = '';
-                        if (fields[field].name == 'id') {
-                            cellvalue = tabledata[rowdata]['pk'];
-                        } else {
-                            cellvalue = tabledata[rowdata].fields[[fields[field].name]];
-                        }
-                        row += '<td class = "' + fields[field].name + ' ' + fields[field].type + '">' + cellvalue + '</td>';
-                    }
-                    row += '</tr>';
-                    rows += row;
-                }
-                table.html(headers + rows);
+                var tableName = table.attr('class');
+                var rowId = element.parent().children('.id').text();
+                var previousValue = event.currentTarget.defaultValue;
+                var parent = $(this).parent();
+                var valueType = $(this).attr('class');
+                var valueNew = $(this).val();
+                var fieldName = $(this).attr('name');
+                parent.empty();
 
-                $('td').click(function () {
+                if (valueType == 'int') {
+                    if (isNaN(valueNew)) {
+                        valueNew = previousValue;
+                    }
+                }
+
+                sendNewValue(tableName, fieldName, rowId, valueNew);
+
+                parent.text(valueNew);
+                parent.click(function () {
                     onCellClick($(this));
                 });
+            });
 
+            $('#inp').focusout(function (event) {
+                var previousValue = event.currentTarget.defaultValue;
+                var parent = $(this).parent();
+
+                parent.empty();
+
+                parent.text(previousValue);
+                parent.click(function () {
+                    onCellClick($(this));
+                });
+            });
+
+
+        }
+
+        function onFieldClick(element) {
+            var value = element.text();
+            var celltype = element.attr('class');
+            var cellname = element.attr('name');
+
+            if (celltype == 'date') {
+                element.datepicker();
+                element.datepicker('option', 'dateFormat', 'yy-mm-dd');
+                element.datepicker("setDate", value);
+                element.keydown(function(){
+                  return false;
+                });
             }
 
-        });
+            element.focus();
+
+            element.change(function (event) {
+
+                var valueType = $(this).attr('class');
+                var valueNew = $(this).val();
+                var fieldName = $(this).attr('name');
+
+                if (valueType == 'int') {
+                    if (isNaN(valueNew)) {
+                        valueNew = 0;
+                    }
+                }
+
+                $(this).val(valueNew);
+                element.click(function () {
+                    onFieldClick($(this));
+                });
+            });
+
+        }
+
+        function fillTable(tablename, fields, tabledata) {
+            var table = $('#activetable');
+            table.attr('class', tablename);
+            //clean table
+            table.empty();
+            //table headers
+            var headers = '<tr>';
+            var field = null;
+            for (field in fields) {
+                headers += '<th>' + fields[field].verbose_name + '</th>';
+            }
+            headers += '</tr>';
+            //table rows
+            var rowdata = null;
+            var rows = '';
+            tabledata = JSON.parse(tabledata);
+            for (rowdata in tabledata) {
+                var row = '<tr>';
+                for (field in fields) {
+                    var cellvalue = '';
+                    if (fields[field].name == 'id') {
+                        cellvalue = tabledata[rowdata]['pk'];
+                    } else {
+                        cellvalue = tabledata[rowdata].fields[[fields[field].name]];
+                    }
+                    row += '<td class = "' + fields[field].name + ' ' + fields[field].type + '">' + cellvalue + '</td>';
+                }
+                row += '</tr>';
+                rows += row;
+            }
+            table.html(headers + rows);
+
+            $('td').click(function () {
+                onCellClick($(this));
+            });
+
+        }
+
+        function fillNewForm(tablename, fields) {
+            $('#newform').empty();
+            $('#newform').attr('class', tablename);
+            for (field in fields) {
+                if (fields[field].name == 'ID' || fields[field].name == 'id') {
+                    continue;
+                }
+                $('#newform').append('<label>' + fields[field].verbose_name + '<input class=' + fields[field].type + ' type=text name=' + fields[field].name + ' /></label><br>');
+            }
+            $('#newform').append('<input id="submit" type="submit"  value="Добавить">');
+
+            $('#newform').find("input,select").not('[type="submit"]').each(function () {
+                $(this).click(function () {
+                    onFieldClick($(this));
+                });
+            });
+
+            $('#newform').submit(function () {
+                return false;
+            });
+
+            $('#submit').click(function () {
+                $('#submit').attr('disabled', true);
+                var table_name = $('#newform').attr('class');
+                var haveMistakes = false;
+                $('#newform').find("input,select").not('[type="submit"]').each(function () {
+                    if ($(this).val() == '') {
+                        haveMistakes = true;
+                        $(this).addClass('mistake');
+                    }
+                });
+
+                if (haveMistakes) {
+                    $('#msg').empty();
+                    $('#msg').append('<p>Не все поля заполнены</p>');
+                    $('#submit').attr('disabled', false);
+                    return;
+                }
+                sendNewRowData(table_name, JSON.stringify($('#newform').serializeArray()));
+                $('#submit').attr('disabled', false);
+            });
+        }
+
+        function sendNewRowData(table_name, formDataJSON){
+            var newUrl = $('#newform').attr('action');
+            $.post(newUrl, {table: table_name, object_data: formDataJSON},
+            function(data){
+                $.get(data.link, function (data) {
+                    if(data.success){
+                        $('#msg').empty();
+                    }
+                    fillTable(data.tablename, data.fields, data.tabledata);
+                    fillNewForm(data.tablename, data.fields);
+                });
+            });
+        }
+    });
     </script>
 {% endblock %}

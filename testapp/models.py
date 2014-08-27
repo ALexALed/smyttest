@@ -43,7 +43,7 @@ def get_modelclass_by_name(classname):
 def update_object(modelname, id, field, value):
     modelclass = get_modelclass_by_name(modelname)
     object_upd = modelclass.objects.get(pk=int(id))
-    setattr(object_upd, field, value);
+    setattr(object_upd, field, value)
     object_upd.save()
 
 
