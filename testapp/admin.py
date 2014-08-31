@@ -1,5 +1,9 @@
-from django.contrib import admin
-from models import modelslist
+#encoding: utf-8
 
-admin.site.register(modelslist)
+__author__ = 'alexaled'
+
+from django.contrib import admin
+from models import models_list
+
+admin.site.register(models_list)
 
