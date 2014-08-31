@@ -1,4 +1,4 @@
-#encoding: utf-8
+#  encoding: utf-8
 
 __author__ = 'alexaled'
 
@@ -26,7 +26,8 @@ class ModelsRequestTests(TestCase):
             for field in model_fields_types:
                 if field['name'] == 'id':
                     continue
-                setattr(model_object, field['name'], default_values[field['type']])
+                setattr(model_object, field['name'],
+                        default_values[field['type']])
 
             model_object.save()
 
@@ -35,9 +36,11 @@ class ModelsRequestTests(TestCase):
             self.assertEquals(new_object, 1, 'not save object in db')
 
     def test_request(self):
-        #create objects
+        # create objects
         self.test_models()
-        defaults_values = {'int': 200, 'char': 'valchanged', 'date': timezone.now().date()-datetime.timedelta(days=1)}
+        new_date = timezone.now().date()-datetime.timedelta(days=1)
+        defaults_values = {'int': 200, 'char': 'valchanged',
+                           'date': new_date}
         client = Client()
 
         response = client.get('/')
@@ -47,29 +50,41 @@ class ModelsRequestTests(TestCase):
 
         for table in models_names:
             response = client.post('/table-content/'+table['name']+'/',
-                                   {'value': '1'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-            self.assertEqual(response.status_code, 200, 'response code not valid')
+                                   {'value': '1'},
+                                   HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(response.status_code, 200,
+                             'response code not valid')
             self.assertContains(response, table['name'])
 
             model_class = get_model_class_by_name(table['name'])
             model_fields_types = get_fields_names_types(model_class)
             field = model_fields_types[1]
-            send_data = {'table': table['name'], 'field': field['name'], 'object_id': 1,
+            send_data = {'table': table['name'],
+                         'field': field['name'],
+                         'object_id': 1,
                          'value': defaults_values[field['type']]}
-            response = client.post('/table-post/', send_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-            self.assertEqual(response.status_code, 200, 'response code not valid')
-            self.assertEqual(getattr(model_class.objects.get(pk=1), field['name']), defaults_values[field['type']],
-                             'model object not contains new value')
+            response = client.post('/table-post/', send_data,
+                                   HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(response.status_code, 200,
+                             'response code not valid')
+            self.assertEqual(
+                getattr(model_class.objects.get(pk=1), field['name']),
+                defaults_values[field['type']],
+                'model object not contains new value')
 
             object_data = []
             for field in model_fields_types:
                 if field['name'] == 'id':
                     continue
-                object_data.append({'name': field['name'],
-                                    'value': unicode(defaults_values[field['type']])})
+                object_data.append(
+                    {'name': field['name'], 'value':
+                        unicode(defaults_values[field['type']])})
 
-            send_data = {'table': table['name'], 'object_data': json.dumps(object_data)}
-            response = client.post('/new-post/',  send_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-            self.assertEqual(response.status_code, 200, 'response code not valid')
-            self.assertEqual(model_class.objects.get(pk=2).id, 2, 'model object not contains new object')
-
+            send_data = {'table': table['name'],
+                         'object_data': json.dumps(object_data)}
+            response = client.post('/new-post/',  send_data,
+                                   HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(response.status_code, 200,
+                             'response code not valid')
+            self.assertEqual(model_class.objects.get(pk=2).id, 2,
+                             'model object not contains new object')

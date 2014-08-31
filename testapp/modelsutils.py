@@ -1,4 +1,4 @@
-#encoding: utf-8
+#  encoding: utf-8
 
 __author__ = 'alexaled'
 
@@ -40,7 +40,9 @@ def get_fields_names_types(model_class):
         elif field_class == models.fields.DateField:
             field_type = 'date'
 
-        models_fields.append({'name': attr.attname, 'type': field_type, 'verbose_name': attr.verbose_name})
+        models_fields.append({'name': attr.attname,
+                              'type': field_type,
+                              'verbose_name': attr.verbose_name})
 
     return models_fields
 
@@ -49,5 +51,6 @@ def get_models_names_titles(models_list):
     """
     Function return list of dict with name and verbose_name for models
     """
-    return [{'name': model.__name__, 'verbose_name': model._meta.verbose_name.title()} for model in models_list]
-
+    return [{'name': model.__name__,
+             'verbose_name': model._meta.verbose_name.title()}
+            for model in models_list]

@@ -1,4 +1,4 @@
-#encoding: utf-8
+#  encoding: utf-8
 
 __author__ = 'alexaled'
 
@@ -65,4 +65,3 @@ def new_post(request):
         return HttpResponse(json.dumps(send_data), content_type="application/json")
     else:
         raise Http404
-

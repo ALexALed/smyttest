@@ -1,4 +1,4 @@
-#encoding: utf-8
+#  encoding: utf-8
 
 __author__ = 'alexaled'
 
@@ -25,7 +25,9 @@ def create_models():
             fields = table_data.pop('fields', [])
             title = table_data.pop('title', data)
 
-            attributes['Meta'] = type('Meta', (), {'verbose_name_plural': title, 'verbose_name': title})
+            attributes['Meta'] = type('Meta', (),
+                                      {'verbose_name_plural': title,
+                                       'verbose_name': title})
 
             for field in fields:
                 attributes[field['id']] = modelsutils.set_field(field)
@@ -59,4 +61,3 @@ def update_object(model_name, obj_id, field, value):
 
 
 models_list = create_models()
-
