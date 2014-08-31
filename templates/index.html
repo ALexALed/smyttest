@@ -43,8 +43,8 @@
         $('.tablelink').click(function () {
             $('#msg').empty();
             $.get($(this).attr('id'), function (data) {
-                fillTable(data.tablename, data.fields, data.tabledata);
-                fillNewForm(data.tablename, data.fields);
+                fillTable(data.tableName, data.fields, data.tableData);
+                fillNewForm(data.tableName, data.fields);
             });
         });
 
@@ -116,6 +116,8 @@
                 if (valueType == 'int') {
                     if (isNaN(valueNew)) {
                         valueNew = previousValue;
+                    } else {
+                        valueNew = parseInt(valueNew);
                     }
                 }
 
@@ -148,34 +150,38 @@
         function onFieldClick(element) {
             var value = element.text();
             var celltype = element.attr('class');
-            var cellname = element.attr('name');
 
-            if (celltype == 'date') {
+            element.unbind('focusin');
+
+            if (element.hasClass('date')) {
                 element.datepicker();
                 element.datepicker('option', 'dateFormat', 'yy-mm-dd');
                 element.datepicker("setDate", value);
                 element.keydown(function () {
                     return false;
                 });
-            }
 
-            element.focus();
+            }
 
             element.change(function (event) {
 
                 var valueType = $(this).attr('class');
                 var valueNew = $(this).val();
-                var fieldName = $(this).attr('name');
 
                 if (valueType == 'int') {
                     if (isNaN(valueNew)) {
                         valueNew = 0;
+                    } else {
+                        valueNew = parseInt(valueNew);
                     }
                 }
 
                 $(this).val(valueNew);
-                element.click(function () {
-                    onFieldClick($(this));
+            });
+
+            element.focusout(function(){
+               $(this).focusin(function () {
+                     onFieldClick($(this));
                 });
             });
 
@@ -228,11 +234,12 @@
                 }
                 $('#newform').append('<label>' + fields[field].verbose_name + '<input class=' + fields[field].type + ' type=text name=' + fields[field].name + ' /></label><br>');
             }
+
             $('#newform').append('<input id="submit" type="submit"  value="Добавить">');
 
             $('#newform').find("input,select").not('[type="submit"]').each(function () {
-                $(this).click(function () {
-                    onFieldClick($(this));
+                 $(this).focusin(function () {
+                     onFieldClick($(this));
                 });
             });
 
@@ -249,6 +256,7 @@
                         haveMistakes = true;
                         $(this).addClass('mistake');
                     }
+
                 });
 
                 if (haveMistakes) {
@@ -270,8 +278,8 @@
                             if (data.success) {
                                 $('#msg').empty();
                             }
-                            fillTable(data.tablename, data.fields, data.tabledata);
-                            fillNewForm(data.tablename, data.fields);
+                            fillTable(data.tableName, data.fields, data.tableData);
+                            fillNewForm(data.tableName, data.fields);
                         });
                     });
         }
