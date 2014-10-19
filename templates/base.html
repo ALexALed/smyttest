@@ -4,21 +4,32 @@
     {% load staticfiles %}
     <meta charset="UTF-8">
     <title>Тестовое задание</title>
-    <link rel="stylesheet" type="text/css" href={% static 'css/style.css'%}/>
-    <link rel="stylesheet" type="text/css" href={% static 'css/jquery.ui.css'%}/>
-    <script src={% static 'js/jquery.min.js'%}></script>
-    <script src={% static 'js/jquery.ui.js'%}></script>
-    <script src={% static 'js/jquery.cookie.js'%}></script>
+    <link rel="stylesheet" type="text/css" href={% static 'css/style.css' %}/>
+    <link rel="stylesheet" type="text/css" href={% static 'css/jquery.ui.css' %}/>
+    <script src={% static 'js/jquery.min.js' %}></script>
+    <script src={% static 'js/jquery.ui.js' %}></script>
+    <script src={% static 'js/jquery.cookie.js' %}></script>
 </head>
 <body>
 <div class="left-nav">
-    {% block sheets %}
-    {% endblock %}
+    <ul>
+        {% for table in tables %}
+            <li><a href="#" class="tablelink" id="{% url 'table-content' table.name %}">{{ table.verbose_name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
 </div>
 <div class="content">
-    {% block content %}
-    {% endblock %}
-</div>
+    <table id="activetable"></table>
 
+    <form id="newform" method="POST" action="{% url 'new-post' %}">
+
+    </form>
+    <div id="msg">
+
+    </div>
+
+</div>
+<script src={% static 'js/dynamic_tables_script.js' %}></script>
 </body>
 </html>
